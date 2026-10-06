@@ -430,3 +430,86 @@
   color: var(--text);
   box-shadow: 0 0 10px var(--accent-glow);
 }
+
+.sidebar-3d {
+  background: var(--panel);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.sidebar-3d:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.sidebar-3d.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+
+.sidebar-3d .pg-dot {
+  box-shadow: 0 0 8px var(--accent-glow);
+}
+
+.world3d {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding: 20px 24px 16px;
+  min-height: 0;
+}
+
+.world3d-title {
+  color: var(--accent);
+  font-family: var(--font-ui);
+  font-size: 16px;
+  letter-spacing: 2px;
+  text-shadow: 0 0 12px var(--accent-glow);
+}
+
+.world3d-stage {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: #0b1018;
+}
+
+.world3d-canvas {
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.world3d-labels {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.world3d-label {
+  position: absolute;
+  padding: 4px 12px;
+  color: var(--text);
+  background: rgba(11, 16, 24, 0.9);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-family: var(--font-ui);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+}

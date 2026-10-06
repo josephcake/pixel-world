@@ -25,7 +25,7 @@ World → WorldViewport → WorldObjects
 
 - **React 19** + **Vite 8**, plain **JSX** (no TypeScript), ESM.
 - **npm**, lint with **oxlint**.
-- **No 3D library.** Rendering is a **custom CPU software rasterizer** (`src/engine/framebuffer.js`).
+- **Custom CPU software rasterizer** for the isometric world (`src/engine/framebuffer.js`). **three.js** is an optional, lazy-loaded dependency used only for the separate **3D World** view — the pixel/architectural renderer is not WebGL.
 - **Plain CSS** (`src/index.css`, `src/App.css`). No Tailwind/CSS-in-JS.
 - State: React hooks only. No router (single page, sidebar section switching).
 
@@ -35,9 +35,15 @@ World → WorldViewport → WorldObjects
 - **Data-driven item specs** in `src/scenes/`:
   - Residential — 7 houses.
   - Commercial — 4 warehouses (roller doors, strip windows).
-  - Landscape — 7 road tiles (front, side, crossroad, and 4 turns) with sidewalks, plus a generic **pavement** tile (neutral, walkable surface) and a single **parking spot**.
+  - Landscape — removed (the old road/pavement/parking tiles are superseded by the modular Road System).
+  - Logistics — 10 low-poly supply-chain assets (semi truck, box truck, shipping container, pallet, crate, cardboard box, forklift, reach truck, yard tractor, tower crane), 3D-only.
+  - Nature — 15 low-poly vegetation items (two shapes each of small/medium/large tree, conifer, cherry + white blossom, plus bush, grass, weed) with procedural per-instance variation.
+  - Vehicles — 10 low-poly road vehicles (sedan, compact, pickup, minivan, police car, ambulance, fire engine, taxi, delivery van, motorcycle), 3D-only.
+  - Props — 5 detailed low-poly street props (fire hydrant, mailbox, vertical traffic light, street light, trash can), 3D-only.
+  - Road System — 15 modular two-way road tiles on a universal 4-unit grid (straights, 4 corners, crossroad, T-junctions, offset, dead-end, Y, roundabout, transition) with identical edge sockets, curbs, sidewalks and markings.
 - A **grid/footprint standard** (`src/engine/building/grid.js`): `TILE = 1`, modular sizes `1, 2, 4, 6, 8, 12`; buildings ≥ 2×2, `1×1` reserved for future props.
 - A **Gallery** (uniform square grid, cached + progressive rendering) and a **Playground** (infinite, zoomable isometric canvas with pan/zoom, placement, 2-way rotation via the `Rotate (R)` button / `R` key, and selection).
+- An optional **3D World** view (sidebar entry): a three.js perspective scene built from the same data-driven item specs, laid out by category rows with orbit/zoom/pan controls. The four warehouses have distinct low-poly designs (compact / two-tier / long-with-monitor / wide-logistics-center) rather than scaled copies. A **Logistics** row adds low-poly supply-chain assets (semi truck, box truck, shipping container) plus a cargo-handling library (pallet, crate, cardboard box, forklift, reach truck, yard tractor, tower crane), a row of 10 road vehicles, a modular road kit, and a row of trees (incl. cherry blossom), bushes and grass. A small assembled example road network is placed to the side. Lazy-loaded so three.js stays out of the main bundle.
 - **Procedural blueprints** (`src/scenes/blueprints/`) — seeded, validated generators (e.g. a "Company Supply & Transit" facility) triggered by the Playground's **Random Blueprint** action.
 - The **32-bit/pixel design system** (dark navy, red/green accents, `Courier New`).
 
@@ -67,6 +73,7 @@ Placed objects get **stable instance IDs** and can be **selected** in the playgr
 
 ```
 src/engine/            # software rasterizer + isometric building engine (no React)
+src/engine/world3d/     # item spec -> three.js scene graph (3D World view; detailed warehouse builder; supply-chain assets)
 src/world/             # world-object + connection-point data model (no rendering)
 src/scenes/            # data-driven item specs grouped by category
 src/components/        # React UI (Sidebar, Gallery, Playground); App.jsx lives at src/App.jsx

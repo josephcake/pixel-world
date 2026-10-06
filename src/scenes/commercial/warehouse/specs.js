@@ -1,8 +1,8 @@
 const WALL = {
-  front: [[158, 164, 172], [142, 148, 156]],
-  side: [[128, 134, 142], [112, 118, 126]],
+  front: [[216, 220, 224], [200, 204, 210]],
+  side: [[188, 192, 198], [170, 174, 180]],
 };
-const TRIM = [70, 76, 84];
+const TRIM = [64, 70, 80];
 const ROOF = {
   type: "flat",
   height: 0.4,
@@ -33,9 +33,11 @@ const doors = (centers, halfW, z1) =>
 export const WAREHOUSE_SPECS = [
   {
     id: "warehouse-small",
+    type: "warehouse",
+    variant: "small",
     name: "Small Warehouse",
     w: 4,
-    d: 2,
+    d: 4,
     plotMargin: 0,
     stories: 1,
     storyHeight: 2.5,
@@ -50,9 +52,11 @@ export const WAREHOUSE_SPECS = [
   },
   {
     id: "warehouse-medium",
+    type: "warehouse",
+    variant: "medium",
     name: "Medium Warehouse",
     w: 6,
-    d: 2,
+    d: 4,
     plotMargin: 0,
     stories: 1,
     storyHeight: 2.5,
@@ -67,9 +71,11 @@ export const WAREHOUSE_SPECS = [
   },
   {
     id: "warehouse-large",
+    type: "warehouse",
+    variant: "large",
     name: "Large Warehouse",
     w: 6,
-    d: 3,
+    d: 6,
     plotMargin: 0,
     stories: 1,
     storyHeight: 3,
@@ -84,9 +90,11 @@ export const WAREHOUSE_SPECS = [
   },
   {
     id: "warehouse-mega",
+    type: "warehouse",
+    variant: "mega",
     name: "Mega Warehouse",
-    w: 8,
-    d: 4,
+    w: 12,
+    d: 8,
     plotMargin: 0,
     stories: 1,
     storyHeight: 4,

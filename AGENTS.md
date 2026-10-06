@@ -35,7 +35,7 @@ not `HouseViewer / WarehouseViewer / RoadViewer / VehicleViewer`.
 
 - **React 19** + **Vite 8**, plain **JSX (no TypeScript)**, ESM (`"type": "module"`).
 - Package manager: **npm**. Lint: **oxlint** (`.oxlintrc.json`).
-- **No 3D/rendering library** (no three.js, deck.gl, etc.). Rendering is a **custom CPU software rasterizer**.
+- The isometric **world viewport** is a **custom CPU software rasterizer** (no 3D scene graph, no WebGL). **three.js** is used only for the optional **3D World** view (lazy-loaded), not for the isometric pixel/architectural rendering.
 - Styling: **plain CSS** (`src/index.css`, `src/App.css`). No Tailwind, no CSS-in-JS.
 - State: **React `useState`/`useRef`/`useMemo`** only. No router (single page, sidebar section switching). No global store.
 - Scripts: `npm run dev`, `npm run build`, `npm run lint`, `npm run preview`.
@@ -69,6 +69,16 @@ src/
   engine/
     framebuffer.js      # software rasterizer (fill/stroke/blit/downsample)
     color.js            # rgb<->hsl + architectural() theme recoloring
+    world3d/
+      buildItem.js      # spec -> three.js scene graph (3D World view)
+      warehouse.js      # detailed low-poly warehouse builder (spec.type === "warehouse")
+      supplyChain.js    # low-poly semi truck / box truck / shipping container assets
+      cargo.js          # low-poly pallet / crate / cardboard / forklift / reach truck / yard tractor / crane
+      nature.js         # low-poly trees (incl. blossom) / bush / grass, procedural variation
+      vehicles.js       # low-poly road vehicles (passenger / emergency / commercial / motorcycle)
+      urbanProps.js     # detailed low-poly street props (hydrant, mailbox, traffic light, street light, trash can)
+      roads.js          # modular two-way road kit (straights, corners, intersections, roundabout…)
+      materials.js      # shared three.js material/geometry helpers
     building/
       iso.js            # isometric projection + makeProjector + ground/shadow helpers
       grid.js           # TILE + modular footprint standard (see §5)
@@ -81,6 +91,11 @@ src/
   scenes/
     collections.js      # COLLECTIONS / COLLECTION_LIST (residential, commercial, landscape)
     allItems.js         # ALL_GROUPS / ALL_ITEMS (for the playground palette)
+    logistics/          # specs + items for the 3D supply-chain assets
+    vehicles/           # specs + items for the road vehicles
+    props/              # specs + items for urban street props
+    roads/              # specs + items for the modular 3D road kit
+    nature/             # specs + items for trees/bush/grass vegetation
     residential/house/  # specs.js (BUILD_SPECS), index.js (HOUSES), illustration.js
     commercial/warehouse/# specs.js (WAREHOUSE_SPECS), index.js
     commercial/index.js
@@ -91,6 +106,7 @@ src/
     Sidebar.jsx         # hamburger overlay nav + Playground entry
     Gallery.jsx         # uniform square grid + render cache
     Playground.jsx      # infinite, zoomable canvas (camera + pan/zoom + culling)
+    World3D.jsx         # optional three.js 3D view (lazy-loaded)
     renderCache.js      # offscreen-canvas cache keyed by item/theme/size
     IllustrationHouse.jsx # unused (flat-illustration hero, kept but unexposed)
   App.css / index.css
@@ -113,8 +129,13 @@ Legacy/leftover files (safe to ignore or remove later): `src/PixelWorld.jsx` (or
 
 Current item catalog:
 - **Residential (7 houses)** — tower 2×2, family 3×2, modern 3×2, townhouse 2×3, villa 4×3, suburban 4×3, mansion 4×4.
-- **Commercial (4 warehouses)** — 4×2, 6×2, 6×3, 8×4.
-- **Landscape (9 tiles)** — 7 road tiles (front 2×2, side 2×2, cross 2×2, and four 2×2 turns), a generic **pavement 2×2** (neutral, unmarked paved surface — walkable by pedestrians, cars, bikes; tiles seamlessly), and a **parking spot 1×2** (single stall with painted "U" markings).
+- **Commercial (4 warehouses)** — 4×4, 6×4, 6×6, 12×8.
+- **Logistics (10, 3D-only assets)** — semi truck 4.8×0.9, box truck 2.9×0.9, shipping container 3.0×1.0 (`supplyChain.js`); pallet 1.2×1.0, crate 1.0×0.9, cardboard box (2 sizes), forklift 2.2×1.0, reach truck 1.9×0.95, yard tractor 2.8×1.1, tower crane 8×1.6 (`cargo.js`). No isometric `draw`; built for the 3D World only.
+- **Nature (15, 3D-only)** — two differently-shaped variants each of small/medium/large tree, conifer, cherry blossom, white blossom, plus bush, grass patch, weed cluster (`nature.js`). Flat-shaded faceted forms with procedural per-instance variation (scale/rotation/deformation).
+- **Vehicles (10, 3D-only)** — sedan, compact, pickup, minivan, police car, ambulance, fire engine, taxi, delivery van, motorcycle (`vehicles.js`). Rounded low-poly bodies (chamfered panels, fender flares, proud chunky wheels, mirrors, bumpers, grille/lights); passenger cars share one base builder, box vehicles another.
+- **Props (5, 3D-only)** — fire hydrant, mailbox, vertical traffic light, street light, trash can (`urbanProps.js`). Detailed low-poly street furniture with modeled hardware (outlets, hinges, visors, lenses, bolts).
+- **Road System (15, 3D-only)** — modular two-way road kit on one universal 4-unit tile: 2.6 road (2 × 1.3 lanes), 0.7 sidewalks each side, constant curb height. Pieces: straight Z/X, 4 corners (constant-width arc), crossroad, 2 T-junctions, turning intersection, offset intersection, dead-end, Y-junction, roundabout, transition (`roads.js`). Every edge socket is dimensionally identical, so tiles snap seam-free.
+- **Landscape tiles removed** — the old 2D road tiles, pavement and parking spot are no longer catalogued (superseded by the modular **Road System**). `src/scenes/landscape/` still exports `ROADS`/`PAVEMENT`/`PARKING` for the blueprint generator.
 
 ---
 
@@ -232,6 +253,7 @@ Long-term visual direction: a sophisticated architectural planning tool — dark
 - **Sidebar** (hamburger, top-left): **Residential / Commercial / Landscape** collections, plus a green-highlighted **Playground** entry and a **Theme** switch (32-bit / Pixel vs Futuristic Architectural).
 - **Gallery**: uniform square grid of items with footprint labels (`Family Home · 3x2`), rendered through a cache (`renderCache.js`) + progressive per-frame scheduling.
 - **Playground**: infinite, zoomable isometric canvas — drag to pan, scroll to zoom (0.35×–4×), left-click place, right-click remove, category chips + scrolling item palette, hover shows cell + footprint ghost, click selects objects (blue highlight + readout), `Copy JSON` exports the world, and a **Random Blueprint** action generates a procedural layout (see `src/scenes/blueprints/` — reusable seeded, validated generators). Renders via `renderViewport` (camera + grid + viewport culling + painter's-algorithm depth sort).
+- **3D World** (sidebar entry): an optional three.js perspective view of the whole catalog, laid out by category rows on a grid ground. `src/engine/world3d/buildItem.js` converts each data-driven item spec into a three.js `Group` (walls, gable/hip/flat roofs, windows, doors, roller doors, chimneys, landscape slabs) — the same specs the CPU renderer uses. Warehouses have a dedicated low-poly builder (`src/engine/world3d/warehouse.js`, dispatched on `spec.type === "warehouse"` then `spec.variant`) with **four architecturally distinct designs** — small (compact single volume, one loading door, thin parapet), medium (two-tier massing with a monitor), large (long body with a roof monitor ridge and a prominent office tower), mega (wide low slab, tall thick parapet, oversized bays, tiny office, many rooftop units). Lazy-loaded via `React.lazy` so three.js stays out of the main bundle. Camera: orbit/zoom/pan (`OrbitControls`). This is a separate *view* of the same world data, not a replacement for the isometric renderer. The **Logistics** row shows low-poly supply-chain assets from `src/engine/world3d/supplyChain.js` (semi truck, box truck, shipping container; rounded/beveled bodies, lathe tires) and `src/engine/world3d/cargo.js` (pallet, crate, cardboard box, forklift, reach truck, yard tractor, tower crane). The **Nature** row shows low-poly vegetation — trees (incl. cherry/white blossom, plus a second shape per tree type), bush, grass, weeds — from `src/engine/world3d/nature.js` with per-instance variation.
 
 **Item-rendering themes** (`src/engine/building/themes.js`) select how the isometric art is drawn, and are tied to the UI theme (the `flat` theme was removed; the `illustration` module remains but is unexposed):
 - `PIXEL_THEME` — the 32-bit pixel art (used by the **32-bit / Pixel** UI theme).
